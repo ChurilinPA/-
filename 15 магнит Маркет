@@ -1,0 +1,19 @@
+1)
+
+select date,
+       count(video_id) as views
+       count(distinct user_id) as users
+from reports_stg-watch_content
+group by date
+
+2)
+
+select user_id
+from (select user_id,
+       sum(case when video_id = 1 then 1 else 0 end) as video_1,
+       sum(case when video_id = 2 then 1 else 0 end) as video_2,
+       sum(case when video_id = 3 then 1 else 0 end) as video_3
+     from reports_stg-watch_content
+     group by user_id) as t
+where video_1 > 0 and video_2 = 0 and video_3 > 0;
+
