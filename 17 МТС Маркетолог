@@ -1,0 +1,38 @@
+1) Сколько на каждом тарифе (tariff) абонентов
+
+select tariff,
+        count(abonent_id)
+from abonent
+group by tariff
+
+2) Какой в разрезе тарифов средний размер начислений (all_clc) в мае’19;
+
+select tariff,
+        avg(all_clc)
+from abnt a 
+left join clcd c on a.abonent_id = c.abonent_id
+where extract(month from table_business_month) = 5 and extract(year from table_business_month) = 2019
+group by tariff
+
+3) Какой в разрезе тарифов средний объём потребляемого трафика (data_traffic_GB) в апреле’19
+
+select  tariff,
+        avg(data_traffic_GB)
+from abnt a
+left join traf t on a.abonent_id = t.abonent_id
+where extract(month from table_business_month) = 4 and extract(year from table_business_month) = 2019
+group by tariff
+
+4) Какое распределение абонентской базы по периоду активации (activation_date) – здесь предлагаю разбить на 5 групп, определив эти группы по своему усмотрению.
+
+
+select  groups,
+        count(client_id) as count_clients
+from (select *,
+       case when now() - activation_date <= 7 then 'less week'
+            when now() - activation_date <= 30 then 'less month'
+            when now() - activation_date <= 90 then 'less quarter'
+            when now() - activation_date <= 180 then 'less half year'
+            else 'more half year' as groups
+from abnt) as t
+group by groups
