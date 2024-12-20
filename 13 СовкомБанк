@@ -1,0 +1,26 @@
+1) 
+select client_fio
+from clients
+where client_type = 'Пенсионер' and client_address not like '%Москва%';
+2)
+select c.client_fio,
+       d.document_no
+from clients c
+left join documents d on c.client_id = d.client_id
+where d.valid_to = '2220-01-01';
+3)
+select c.client_id
+from clients c
+left join documents d on c.client_id = d.client_id and d.valid_to = '2220-01-01'
+where d.client_id is null;
+4)
+select client_id
+from documents
+where valid_to = '2220-01-01'
+group by client_id
+having count(valid_to) > 1;
+5)
+select c.client_id
+from clients c
+left join documents d on c.client_id = d.client_id
+where d.client_id is null;
