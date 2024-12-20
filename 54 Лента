@@ -1,0 +1,50 @@
+1) 
+
+select date,
+        count(video_id) as views_count,
+        count(distinct user_id) as users_count
+from reports_stg.watch_content
+group by date
+order by date
+
+2)
+
+select user_id
+from reports_stg.watch_content
+where date between '2021-01-01' and '2021-02-01'
+group by user_id
+having count(distinct date) = 31 ???
+
+3)
+
+select user_id
+  from (select user_id,
+          sum(case when video_id = 1 then 1 else 0 end) as video_1,
+          sum(case when video_id = 2 then 1 else 0 end) as video_2,
+          sum(case when video_id = 3 then 1 else 0 end) as video_3
+  from reports_stg.watch_content
+  group by user_id) as t
+where video_1 > 0 and video_2 = 0 and video_3 >0
+
+4)
+
+select user_id,
+        name
+from (select  r.user_id,
+        d.name,
+        row_number() over (partition by r.user_id order_by r.transaction_date desc) as rank
+      from raw.orders r
+      left join dicts.items d on r.item_id = d.item_id) as t
+where rank = 1 
+
+
+
+
+
+
+
+
+
+
+
+
