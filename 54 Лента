@@ -13,7 +13,7 @@ select user_id
 from reports_stg.watch_content
 where date between '2021-01-01' and '2021-02-01'
 group by user_id
-having count(distinct date) = 31 ???
+having count(distinct date) = 31 ??? 
 
 3)
 
