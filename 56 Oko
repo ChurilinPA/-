@@ -1,0 +1,61 @@
+3) 
+with cte as (
+            select  user_id,
+                    video_name,
+                    play_user_start::date as date
+            from sport_tv
+            )
+            select user_id
+            from cte
+            where video_name = Порту - Ман найтед 
+                    and date_trunc('day', date) = '2024-10-03'
+                    and user_id not in (select user_id from cte where date >= '2024-09-03' and date < '2024-10-03')
+
+4)
+
+select count(distinct user_id) as users
+from sport_tv s 
+left join model_list m on s.model_id = m.model_id::int 
+where model_name = 'Siemens' and now() - interval '3 days' > play_user_start
+
+5)
+
+with cte as (select user_id,
+                    case when play_user_start >= '2024-10-01' then play_user_start else '2024-10-01' end as star,
+                    case when dateadd(second, duration_in_sec, play_user_start) <= '2024-10-04' then dateadd(second, duration_in_sec, play_user_start) else '2024-10-04' end as end
+            from sport_tv
+            where play_user_start <= '2024-10-04' and dateadd(second, duration_in_sec, play_user_start) >= '2024-10-01'
+            )
+            select user_id,
+                    avg(datediff(second, end, start)::decimal / 3600) as avg_time_hours
+            from cte 
+            group by user_id
+
+6)
+
+select datetime,
+        close_price,
+        close_price / lag(close_price) over (order by date_time) - 1 as asset_raturn
+from price_history
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
