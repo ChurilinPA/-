@@ -1,0 +1,16 @@
+1)
+
+select store_id,
+        avg(total_amount) as avg_cheque,
+        count(distinct client_id) as count_client
+from transactions
+group by store_id
+
+2)
+
+select  user_id,
+        order_id
+from (select *,
+        row_number() over (partition by user_id order_by order_timestamp) as rank
+from orders) as t
+where rank = 1
