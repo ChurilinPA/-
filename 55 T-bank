@@ -10,3 +10,27 @@ group by user_id
 
 2)
 
+with t as (select   o.user_id,
+                    session_id,
+                    extract(epoch from max(event_timestamp) - min(event_timestamp)) as diff
+            from orders o 
+            left join sessions s on o.user_id = s.user_id
+            where date_trunc('month', order_date) = '2024-02-01'
+            group by user_id, session_id
+            ),
+     t1 as (select  user_id,
+                    avg(diff) as avg_time_session
+            from t
+            group by user_id
+            ),
+     t2 as (select user_id
+            from orders
+            where success_flag = 1 and date_trunc('month', order_date) = '2024-03-01'
+            )
+            select  user_id,
+                    avg_time_session,
+                    case when t1.user_id = t2.user_id then 1 end as flag
+            from t1
+            left join t2 on t1.user_id = t2.user_id
+            
+
