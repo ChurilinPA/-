@@ -7,7 +7,7 @@ with cte as (
             )
             select user_id
             from cte
-            where video_name = Порту - Ман найтед 
+            where video_name = 'Порту - Ман найтед'
                     and date_trunc('day', date) = '2024-10-03'
                     and user_id not in (select user_id from cte where date >= '2024-09-03' and date < '2024-10-03')
 
