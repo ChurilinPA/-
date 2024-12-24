@@ -1,0 +1,34 @@
+
+59 Ташкент
+
+1)
+
+select  user_id,
+        first_value(item) over (partiiton by user_id order by created_at) as first_items
+from transactions
+
+2) 
+
+with cte as (
+select user_id,
+        created_at,
+        min(created_at) over (partition by user_id) as first_date
+from transactions  
+            )
+            select  user_id,
+                    count(transaction_id) as count
+            from cte
+            where first_date + interval '3 days' >= created_at
+            group by user_id 
+
+3) Давай теперь представим, что мы хотим сделать похохие вычисления по когортам пользоватлей. чего не хватаёт в данных? как сы ты подошёл к решению:
+
+with cte as (select user_id,
+                    created_at,
+                    min(created_at) over (partition by user_id) as first_date
+            from transactions
+            )
+            select *,
+                    date_trunc('month', first_date) as cohorts,
+                    date_trunc('month', created_at) as month_action
+            from cte
