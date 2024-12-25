@@ -22,4 +22,111 @@ truncate - удаляет все строки из таблицы оставля
 Drop - удаляют все таблицу со структурой, не обратимый процесс
 
 
+Задача 1
+
+В БД есть таблица users:
+CREATE TABLE users
+  (
+    userid        int8,
+    phone         text
+  );
+
+В ней есть поле phone.
+Напиши запрос, который выведет только дублирующиеся номера телефонов в порядке убывания по количеству дублей.
+Формат ответа: столбцы phone, number_of_takes (кол-во дублей), отсортированные по убыванию number_of_takes.
+
+select  phone,
+        count(*) as number_of_takes
+from users
+group by phone
+having count(*) > 1 
+order by count(*) desc
+
+Задача 2
+
+В БД создана таблица user_hits:
+
+CREATE TABLE user_hits
+  (
+    userid        int8,
+    business_dt   date,
+    page          text
+  );
+
+  
+В поле page этой таблицы передается полный URL страницы (с параметрами).
+Напиши запрос, который выведет топ-5 уникальных наиболее посещаемых
+страниц за 7 дней от текущей даты.
+
+
+select  page,
+        count(distinct user_id) as count_users
+from user_hits
+where business_dt >= (now() - interval '7 days')
+group by page
+order by count(distinct user_id) desc
+limit 5 
+
+
+Задача 3
+
+Есть две таблицы:
+1) users с колонками:
+user_id (уникальный идентификатор каждого пользователя)
+username (имя пользователя)
+
+2) transactions с колонками:
+
+transaction_id (уникальный идентификатор каждой транзакции)
+user_id (внешний ключ, ссылается на user_id в таблице users)
+amount (сумма транзакции)
+transaction_date (дата транзакции)
+
+Нужны имена пользователей, у которых сумма всех транзакций за последний месяц превышает 1000 рублей.
+
+with cte as (
+select  transaction_id,
+        user_id,
+        sum(amount) as total_amount
+from transactions
+where transaction_date >= (now() - interval '1 month')
+group by transaction_id, user_id
+having sum(amount) > 1000 
+            )
+select username 
+from cte  
+join users u on cte.user_id = u.user_id
+
+
+Задача 4
+
+В базе лежит изменение цены на какой то товар 
+date - Дата изменения 
+price - Новая цена 
+
+
+Найти цену товар на 20.02.2024
+baza
+date           price
+01.01.2024     500
+02.02.2024     600
+01.03.2024     300
+
+
+
+select price
+from baza
+where date <= '2024-02-20'
+order by date desc
+limit 1
+
+
+
+
+
+
+
+
+
+
 
