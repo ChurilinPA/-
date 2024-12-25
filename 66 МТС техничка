@@ -1,0 +1,81 @@
+66 мтс техничка 
+
+with a as (select 1 as a union
+            select 2 union
+            select 3 union
+            select 3 union
+            select 4 union all
+            select 4 union all
+            select 5)
+
+
+
+1) select * from a
+
+1
+2
+3
+4
+4
+5
+
+2) select a from a group by a
+
+1
+2
+3
+4
+5
+
+3) select sum(a) as a from a group by a
+
+1
+2
+3
+8
+5
+
+4) select sum(a) over (partition by a) as a from a group by a 
+
+ошибку 
+
+
+
+
+2)написать запрос, который получает количество удержанных пользователей в месяц. данный параметр определяется как количество пользователей, которые авторизовались 
+в системе и в текущем, и в предыдущем месяце
+
+
+select a.user_id
+from logins a 
+join logins b on a.user_id = b.user_id and a.date '1 month' + interval '1 month' = b.date 
+
+
+3)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
