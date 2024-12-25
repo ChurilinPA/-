@@ -1,0 +1,28 @@
+68 Яндекс
+
+1) Нужно получить таблицу, в которой для каждого user_id будет найден order_id первого заказа
+
+select  user_id,
+        first_value(order_id) over (partition by user_id order by order_timestamp) as order_id
+from orders
+
+2) Нужно вывести топ 5% пользователей по общему числу заказов за прошлый год
+
+
+
+with cte as (
+            select  user_id,
+                    count(order_id) as orders_count
+            from orders
+            where order_timestamp >= date_trunc('year', now() - interval '1 year') and order_timestamp < date_trunc('year', now()) 
+            group by user_id
+            ),
+            (select user_id,
+                    orders_count,
+                    percent_rank() over (order by orders_count desc) as rank
+            from cte 
+            )
+            select user_id,
+                    orders_count
+            from cte2
+            where rank <= 0.05
