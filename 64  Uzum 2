@@ -107,6 +107,35 @@ Null | 'Another Null'|    5    | five
 6) Как можно построить ETL процесс? Допустим, данные лежат в PostgreSQL DB микросервиса. Как сделать так, чтобы поверх них можно было построить дашборд?
                   
 
+7)
+Вывести клиентов, совершивших покупки во всех категориях и их доли трат в каждой категории от общей суммы трат
+customer_id               spent               category_id
+123                        700                        1
+345                        600                        2
+123                        444                        2
+455                        200                        3
+
+
+with cte as (
+                select  customer_id,
+                        category_id,
+                        sum(spent) as spent_amount
+                from sales
+                group by customer_id, category_id
+                having count(distinct category_id) = (select count(distinct category_id) from sales)
+            ),
+     cte2 as (select customer_id,
+                     sum(spent_amount) as total_spent_amount
+               from cte
+               group by customer_id
+               )
+               select   cte.customer_id,
+                        cte.category_id,
+                        cte.spent_amount / cte2.total_spent_amount as doly
+                from cte
+                left join cte2 on cte.customer_id = cte2.customer_id
+                
+              
 
 
 
