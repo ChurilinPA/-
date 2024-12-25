@@ -1,0 +1,11 @@
+
+
+Имеется таблица с ценой какого-то товара.
+На каждый день dt нам нужно знать сколько товар стоил вчера
+В таблице price два поля: dt (date) и amount (int)
+
+
+select  date,
+        amount,
+        lag(amount) over (order by date) as yesterday_price
+from price 
