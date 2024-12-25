@@ -1,0 +1,67 @@
+1)
+
+with cte as (
+            select  id,
+                    visit_date,
+                    people,
+                    row_number() over (order by visit_date) - row_number() over (partition by people > 100 order by visit_date) as grp
+            from visits
+            ),
+     cte2 as (
+            select  id,
+                    visit_date,
+                    people,
+                    count(*) over (partition by grp) as cnt
+            from cte
+            where people > 100
+            )
+            select  id,
+                    visit_date,
+                    people
+            from cte2
+            where cnt >= 3
+            order by visit_date
+
+2) 
+
+with cancelled_trips as (select date_trunc('day', request_at) as day,
+                                count(*) as cancelled
+                        from Trips
+                        where status like '%cancelled%' and client_id in (select user_id from Users where role = 'client' and banned = 'No')
+                                                    and driver_id in (select user_id from Users where role = 'driver' and banned = 'No')
+                        group by date_trunc('day', request_at)
+                        ),
+        total_trips as  (select date_trunc('day', request_at) as day,
+                                count(*) as total
+                        from Trips
+                        where client_id in (select user_id from Users where role = 'client' and banned = 'No')
+                                and driver_id in (select user_id from Users where role = 'driver' and banned = 'No')
+                        group by date_trunc('day', request_at)
+                        )
+                        select  ct.day,
+                                round(ct.cancelled::decimal / tt.total, 2) as cancellation_rate 
+                        from cancelled_trips ct 
+                        left join total_trips tt on ct.day = tt.day
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
