@@ -1,0 +1,14 @@
+Условие: У вас есть таблица customers, в которой могут храниться дубликати записей.
+Напишите SOL-запрос, который найдет дубликаты по полям first_name, last_name, email 
+
+
+
+select  first_name,
+        last_name,
+        email,
+        count(*) as count_rows
+from customers
+group by first_name,
+         last_name,
+         email
+having count(*) > 1 
