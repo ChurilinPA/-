@@ -1,0 +1,137 @@
+1) Какие виды джойнов ты знаешь? Какой результат будет при использовании каждого?
+Таблица А
+id | value
+1    | one
+Null | 'Null'
+2    | two
+3    | three
+Null | 'Another Null'
+
+Таблица B
+id | value
+1    | 'another one'
+Null | 'Null'
+Null | 'Null'
+2    | two
+2    | 'Null'
+4    | four
+5    | five
+
+
+
+inner join 
+
+1 | one | 1 | 'another one'
+2 | two | 2 | two
+2 | two | 2 | null 
+
+left join 
+
+1    |        one          |  1  | 'another one'
+null |      'null'         |null | null 
+2    |       two           |  2  | two
+2    |       two           |  2  |'null' 
+3    |      three          |null | null 
+Null | 'Another Null'      | null| null 
+
+right join 
+
+1    |        one          |  1  |  'another one'
+null |       null          | Null|  'Null'
+null |       null          | Null|  'Null'
+2    |        two          |  2  |    two
+2    |        null         |  2  |   'Null'
+null |        null         |  4  |    four
+null |        null         |  5  |    five
+
+full join 
+
+1    |    one         |   1    | 'another one'
+Null |   'Null'       |  null  |  null
+null |   null         |  Null  | 'Null'
+null |   null         |  Null  | 'Null'
+2    |   two          |  2     |  two
+2    |    two         |  2     |  null
+3    |   three        | null   |  null
+Null | 'Another Null' | null   |  null
+null |     null       |   4    |  four
+null |     null       |   5    |  five
+
+
+cross join 
+
+1    | 'another one' | 1      | 'another one'
+1    | 'another one' |  Null  | 'Null'
+1    | 'another one' |   Null | 'Null'
+1    | 'another one' |   2    | two
+1    | 'another one' |   2    | 'Null'
+1    | 'another one' |   4    | four
+1    | 'another one' |   5    | five
+Null |     'Null'    |   1    | 'another one'
+Null |     'Null'    |   Null | 'Null'
+Null |     'Null'    |   Null | 'Null'
+Null |     'Null'    |   2    | two
+Null |     'Null'    |   2    | 'Null'
+Null |     'Null'    |   4    | four
+Null |     'Null'    |   5    | five
+2    | two           |   1    | 'another one'
+2    | two           |   Null | 'Null'
+2    | two           |   Null | 'Null'
+2    | two           |   2    | two
+2    | two           |   2    | 'Null'
+2    | two           |   4    | four
+2    | two           |   5    | five
+3    | three         |    1    | 'another one'
+3    | three         |    Null | 'Null'
+3    | three         |    Null | 'Null'
+3    | three         |    2    | two
+3    | three         |    2    | 'Null'
+3    | three         |    4    | four
+3    | three         |    5    | five
+Null | 'Another Null'|    1    | 'another one'
+Null | 'Another Null'|    Null | 'Null'
+Null | 'Another Null'|    Null | 'Null'
+Null | 'Another Null'|    2    | two
+Null | 'Another Null'|    2    | 'Null'
+Null | 'Another Null'|    4    | four
+Null | 'Another Null'|    5    | five
+
+
+
+2) Чем отличается where от having?  - первый фильтрует до группировки, второй, после группировки 
+3) Чем отличается group by от over? -  первый сокращает количество строк таблице, второй нет 
+4) В каких случаях надо применять over (тип задач)?  - скользящее среднее, накопительная сумма, когда нужен более детализированный запрос 
+5) Чем отличаются колоночные БД от строковых? Какие примеры БД каждого типа знаешь? - отличаются храннением информации в памяти и скоростью выполнения запроса, 
+                                                                                      колоночный тип более быстрый (ClickHouse), но строковый тип(Postgresql) быстрее обновлеяется
+                                                                                      и изменяется в отличае от столбцового .
+6) Как можно построить ETL процесс? Допустим, данные лежат в PostgreSQL DB микросервиса. Как сделать так, чтобы поверх них можно было построить дашборд?
+                  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
