@@ -1,0 +1,33 @@
+65 Самокат техничка 2 
+
+1) Напишите SQL запрос, который найдет всех клиентов, у которых суммарная стоимомть всех их заказов превышвет среднюю стоимомть заказов по всем клиентам 
+
+есть две таблицы:
+
+Product_price: product_id, name, price, start_dt, finish_dt
+Sale: client_id, product_id, sale_dt, quantity
+
+
+
+with cte as (
+                select  client_id,
+                        sum(price * quantity) as amount_purchases
+                from sale s
+                left join Product_price pp on s.product_id = pp.product_id
+                group by client_id 
+            ),
+     cte2 as (  select client_id,
+                        avg(amount_purchases) as avg_amount_purchases
+                from cte 
+                group by client_id
+             )
+             select client_id
+             from cte
+             left join cte2 on cte.client_id = cte2.client_id
+             where amount_purchases > avg_amount_purchases
+             
+2)  select  group,
+            dt,
+            goods,
+            sum(goods) over (partition by group order by dt) as sales
+    from goods_groups     
