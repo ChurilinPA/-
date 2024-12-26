@@ -1,0 +1,35 @@
+1) Вывести список пользователей, смотревших video_id 1 и 3 (посмотрел и видео 1, и видео 3), но не смотревших 2
+
+
+select  user_id,
+        sum(case when video_id = 1 then 1 else 0 end) as video_1,
+        sum(case when video_id = 2 then 1 else 0 end) as video_2,
+        sum(case when video_id = 3 then 1 else 0 end) as video_3
+from reports_stg.watch_content
+group by user_id
+having video_1 > 0 and video_2 = 0 and video_3 > 0
+
+
+
+2) Вывести наименование первого купленного товара для каждого пользователя
+
+
+with cte as (
+select  ro.user_id,
+        di.name,
+        row_number() over (partition by do.user_id order by do.transaction_date) as rank
+from raw.orders ro
+join dicts.items di on ro.item_id = di.item_id
+            )
+select  user_id,
+        name
+from cte 
+where rank = 1
+
+--------------------------
+
+select  ro.user_id,
+        first_value(di.name) over (partition by ro.user_id order by ro.transaction_date) as name
+from raw.orders ro
+join dicts.items di on ro.item_id = di.item_id
+        
