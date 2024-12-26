@@ -1,0 +1,25 @@
+76 Т-банк 
+
+1) В тблице user_logs опредалите, есть ли дубли по колонкам user_id и dttm. Если есть, выведите эти user_id и dttm.
+
+select  user_id,
+        dttm
+from user_logs
+group by user_id, dttm
+having count(*) > 1
+
+2) Для каждого пользователя в таблице user_logs выберите последню запись по полю dttm
+
+
+with cte as (
+select user_id,
+        dttm,
+        action,
+        row_number() over (partition by user_id order by dttm desc) as rank
+from user_logs 
+            )
+select  user_id,
+        dttm,
+        action
+from tmp
+where rank = 1
