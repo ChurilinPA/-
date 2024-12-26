@@ -1,0 +1,20 @@
+82 Бургер Кинг
+
+with tmp as (
+select  t2.date_sales,
+        t2.restoran,
+        t2.bludo,
+        t2.Выручка с НДС
+        t1.price,
+        row_number() over (partition by t2.restoran, t2.bludo order by t2.date_sales desc) as rank
+from table_a t1
+inner join table_b t2 on t1.date <= t2.date_sales and t1.restoran = t2.restoran and t1.bludo = t2.bludo
+            )
+select  date_sales,
+        restoran,
+        bludo,
+        price,
+        Выручка с НДС
+        price - Выручка с НДС as discount 
+from tmp
+where rank = 1
