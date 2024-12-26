@@ -1,0 +1,28 @@
+1) Найти id студентов у которых по результатам сессии будет стипендия (все оценки за сессию больше 3)
+
+select id
+from table
+group by id
+having min(mark) > 3
+
+2) 
+
+select  call_date,
+        abon_id,
+        duration / sum(duration) over (partition by call_date) as dayli_ratio
+from (select call_date,
+        abon_id,
+        sum(duration) as duration
+from calls_agg
+group by call_date, abon_id) as t
+
+3)
+
+
+select abon_id,
+        service_id
+(select  abon_id,
+        service_id,
+        row_number() over (partition by abon_id revenue desc) as rank
+from monthly_revenue) as t
+where rank <= 3
