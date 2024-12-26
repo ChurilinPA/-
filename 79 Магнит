@@ -1,0 +1,103 @@
+79 Магнит 
+
+
+1) Таблицы employees (id, name, department_id) и departments (id, name).
+
+Задача:
+Найти количество сотрудников в каждом департаменте, включая те, в которых нет сотрудников
+
+select  d.id as depatment_id,
+        d.name as depatment_name,
+        count(e.id) as employee_count
+from departments d
+left join employees e on d.id = e.department_id
+group by d.id,
+         d.name
+         
+
+2) Входные данные:
+Таблица sales (id, employee_id, sale_amount).
+Задача:
+Вывести сотрудников с их суммарными продажами и рангом по продажам.
+
+
+
+select  employee_id,
+        total_amount,
+        dense_rank() over (order by total_amount desc) as amount_rank 
+from (select  employee_id,
+        sum(sale_amount) as total_amount
+from sales
+group by employee_id) as t
+
+
+3) Таблица logins (id, user_id, login_time).
+Задача:
+Определить пользователей, которые входили в систему более 5 раз за прошедшую неделю.
+
+
+select user_id
+from logins
+where login_time::date >= now() - interval '7 days'
+group by user_id
+having count(login_time::date) > 5 
+
+4) Таблица categories (id, parent_id).
+Задача:
+Вывести все категории, включая их родительские категории.*/
+
+????
+
+
+5) Таблица students (id, name, score).
+Задача:
+Вывести студентов, которые имеют оценки выше средней.*/
+
+
+select  id,
+        name,
+        score
+from( select  id,
+              name,
+              score,
+              avg(score) over () as total_avg
+from students) as t
+where score > total_avg
+
+----------------------------
+
+select id,
+        name,
+        score
+from students
+where score > (select avg(score) from students)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+         
