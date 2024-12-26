@@ -1,0 +1,95 @@
+78 Ozon bank
+
+1) Вывести максимальное одинокое число 
+
+select max(num)
+from MyNumbers
+group by num
+having count(num) = 1
+
+2) Напишите запрос, который для каждого клиента выводит сумму debit, credit операций и VSP_number последней транзакции по месяцам
+
+
+with total_amount_type as (select client_id,
+                                  date_trunc('month', Report_date) as Month_date,
+                                  VSP_Number,
+                                  sum(Tnx_amount) filter (where Txn_type = 'debit') as Debit_amount,
+                                  sum(Tnx_amount) filter (where Txn_type = 'credit') as Credit_amount
+                            from VSP_oper_data
+                            group by client_id,
+                                     date_trunc('month', Report_date),
+                                     VSP_Number
+                           ),
+                     VSP as ( select client_id,
+                                     VSP_Number as Last_VSP
+                              from (select  client_id,
+                                    VSP_Number,
+                                  row_number() over (partition by client_id order by Month_date desc) as rank
+                             from total_amount_type) t1
+                              where rank = 1
+                            )
+                    select client_id,
+                            Month_date,
+                            Debit_amount,
+                            Credit_amount,
+                            Last_VSP
+                    from total_amount_type tt
+                    join VSP v on tt.client_id = v.client_id
+                            
+3)  Напишите запрос, который для каждого клиента выведет его долю операций debit от всех операций debit клиентов по месяцам
+
+
+select  client_id,
+        Report_date,
+        count_transactions  / count(*) over (partition by Report_date) * 100 || '%' as Ration
+from (select  client_id,
+        date_trunc('month', Report_date) as Report_date
+        count(Txn_type) filter (where Txn_type = 'debit' ) as count_transactions,
+from VSP_oper_data 
+group by client_id, date_trunc('month', Report_date)) as t
+
+
+4) Посчитать % изменения кол-ва клиентов, совершивших покупку, месяц к месяцу
+
+
+
+select  order_month,
+        clientcount,
+        (clientcount - lag(clientcount) over (order by order_month)) / lag(clientcount) over (order by order_month) * 100.0 || '%' as PercentChange
+from (select 
+             date_trunct('month', order_date) as order_month,
+             count(distinct client_id) as clientcount
+from client_orders
+group by  date_trunct('month', order_date) as month) as t
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                           
+
+                                     
+            
+
