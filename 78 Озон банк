@@ -21,10 +21,12 @@ with total_amount_type as (select client_id,
                                      VSP_Number
                            ),
                      VSP as ( select client_id,
+                                     Month_date
                                      VSP_Number as Last_VSP
                               from (select  client_id,
-                                    VSP_Number,
-                                  row_number() over (partition by client_id order by Month_date desc) as rank
+                                            Month_date
+                                            VSP_Number,
+                                  row_number() over (partition by client_id, Month_date order by VSP_Number desc) as rank
                              from total_amount_type) t1
                               where rank = 1
                             )
@@ -34,7 +36,7 @@ with total_amount_type as (select client_id,
                             Credit_amount,
                             Last_VSP
                     from total_amount_type tt
-                    join VSP v on tt.client_id = v.client_id
+                    join VSP v on tt.client_id = v.client_id and tt.Month_date = v.Month_d
                             
 3)  Напишите запрос, который для каждого клиента выведет его долю операций debit от всех операций debit клиентов по месяцам
 
