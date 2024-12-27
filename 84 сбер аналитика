@@ -1,0 +1,39 @@
+84 Сбер Аналитика
+
+
+1)
+
+Найти пользователей, которые были на
+странице и отправили форму
+
+select user_id,
+        sum(case when action = 'pagevieve' then 1 else 0) as action_pagevieve,
+        sum(case when action = 'submit' then 1 else 0) as action_submit
+from actions
+group by user_id
+having action_pagevieve > 0 and action_submit > 0
+
+
+
+with cte as (
+select  datetime::date as date,
+        user_id,
+        action
+from actions
+            ),
+   cte2 as (
+select  date,
+        user_id,
+        lag(action) over (partition by user_id order by date) as prev_action
+from cte 
+            )
+select user_id
+from cte2
+where action = 'submit' and prev_action = 'pagevies'
+        
+        
+        
+2)
+
+sum(price) over () - выведет в каждой строчке общую сумму 
+sum(price) over (order by date) - выведет накопительную сумму по дате, текущая строка будет иметь сумму предшествующих строк
