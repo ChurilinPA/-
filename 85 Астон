@@ -1,0 +1,22 @@
+85 Астон техничка с уклоном в DE
+
+1) 
+
+В таблице с данными о клиентах (clients) найти и вывести все последние данные клиентов (ID, Name, Address, Phone)
+без дубликатов по имени и адресу (последние данные имеют максимальный id).
+
+with cte as (
+select  ID, 
+        Name, 
+        Address, 
+        Phone,
+        row_number() over (partition by name, adress order by id desc) as rank
+from clients
+            )
+select ID, 
+        Name, 
+        Address, 
+        Phone
+from cte
+where rank = 1 
+
