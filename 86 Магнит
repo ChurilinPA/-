@@ -1,0 +1,35 @@
+86 Магнит 
+
+1) 
+
+select date,
+        count(item_id) as count_item,
+        count(distinct user_id) as count_user
+from orders
+group by date
+order by date 
+
+2)
+
+select  item_id,
+        item_name,
+        price
+from items
+where update_date <= '2022-05-01'
+
+3) Посчитать среднее количество дней между первым и вторым заказом у пользователей
+
+
+with rank_order as (
+select  user_id,
+        date,
+        min(date) over (partition by user_id) as first_orders,
+        row_number() over (partition by user_id order by date) as rank
+from orders
+                    )
+select  user_id,
+        avg(datediff(days, rank, first_orders)) as avg_count_days
+from  rank_order
+where rank = 2
+group by user_id
+
