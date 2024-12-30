@@ -1,0 +1,32 @@
+87 Aliexpress
+
+1) Есть таблица Employees с информацией о сотрудниках и их менеджерах.
+Вывести имя, зарплату и имя менеджера тех сотрудников, зарплата которых выше зарплаты менеджера.
+
+select  
+        e.fullname,
+        e.salary,
+        m.fullname,
+from employees e
+inner join employees m on e.id = m.managerid and e.salary > m.salary
+
+
+2) Нужно вывести накопленное количество уникальных покупателей и
+GMV с начала месяца за каждый день:
+
+day date (yyyy-mm-dd)
+buyer_id bigint 
+gmv_rub float64
+
+with cte as (
+select  date,
+        buyer_id,
+        gmv_rub,
+        row_number() over (partition by date_trunc('month', date) order by date) as rank_month
+from buyers
+            )
+    select  date,
+            count(distinct buyer_id) over (partition by date_trunc('month', date) order by date) as cum_count,
+            sum(gmv_rub) over (partition by date_trunc('month', date) order by date) as cum_sum
+    from cte 
+    where rank_month = 1 
