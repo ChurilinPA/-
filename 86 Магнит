@@ -28,7 +28,7 @@ select  user_id,
 from orders
                     )
 select  user_id,
-        avg(datediff(days, rank, first_orders)) as avg_count_days
+        avg(datediff(days, date, first_orders)) as avg_count_days
 from  rank_order
 where rank = 2
 group by user_id
