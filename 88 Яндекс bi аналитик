@@ -1,0 +1,40 @@
+88 Яндекс BI аналитик 
+
+1)
+
+Есть таблица с баллами за экзамен
+Вывести id студента и количество полученных им "двоек"
+для тех у кого не менее 2 полученных "пятерок".
+
+student
+exam
+grade
+
+
+with cte as (
+        select  id,
+                sum(case when grade = 2 then 1 else 0 end) as mark_2,
+                sum(case when grade = 5 then 1 else 0 end) as mark_5
+        from table2
+        group by id
+            )
+        select  id,
+                mark_2
+        from cte 
+        where mark_5 >= 2
+        
+2) 
+
+select s.student
+from  students s
+join  required_courses rc on s.major = rc.major
+left join taken_courses tc on s.student = tc.student and rc.course = tc.course
+group by s.student, s.major
+having count(distinct rc.course) = count(distinct tc.course);
+
+3
+
+select  a.a,
+        b.b
+from table1 as a
+join table1 as b on a.a = b.b
