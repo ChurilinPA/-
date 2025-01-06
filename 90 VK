@@ -1,0 +1,104 @@
+90 VK
+
+1) Вывести общую выручку по типам подписок, общую сумму заработка, количество оплаченных подписок (транзакций), выручку на одну транзакцию. 
+   Вывести только те транзакции, количество которых больше 100
+ 
+ 
+select  purchase_type,
+        sum(revenue) as total_amount,
+        count(*) as count_transactions,
+        sum(revenue) / count(*) as revenue_per_transaction
+from df_payments
+group by purchase_type
+having count(*) > 100 
+
+
+2) Вывести топ 100 пользователей по покупкам, а также их дату установления приложения по
+количеству покупок.
+
+
+select  p.client_id,
+        i.install_date,
+        count(*) as total_purchases
+from df_payments p 
+inner join df_installs i on p.client_id = i.p.client_id
+group by p.client_id, i.install_date
+order by count(*) desc 
+limit 100 
+
+3) Разбить пользователей на три сегмента: те, кто потратил меньше 1000 — стандарт сегмент, от 1000 до 10000 — премиум сегмент, больше 10000 — бизнес сегмент. 
+Рассчитать долю полученных сегментов пользователей от количества всех пользователей, долю выручки сегментов от всей выручки, ARPU (Average Revenue Per User).
+
+with user_spending as (
+                        select  client_id,
+                                sum(revenue) as total_spending
+                        from df_payments
+                        group by client_id
+                        ),
+            
+user_segment as (
+                        select  client_id,
+                                case when total_spending < 1000 then 'Standart' 
+                                     when total_spending > 1000 and total_spending < 10000 then 'Premium'
+                                     else 'Business' end as segment
+                        from cte 
+                ),
+                
+segment_stats as (
+                        select  segment,
+                                count(client_id) as segment_user,
+                                sum(total_spending) as segment_sum
+                        from user_segment us
+                        inner join user_spending usg on us.client_id = usg.client_id
+                        group by segment 
+                 ),
+                 
+total_stats as (
+                        select count(distinct client_id) as total_users,
+                                sum(total_spending) as total_revenue
+                        from user_spending
+                )
+select
+    ss.segment,
+    ss.segment_users,
+    (ss.segment_users * 100.0 / ts.total_users) AS segment_users_percent,
+    ss.segment_revenue,
+    (ss.segment_revenue * 100.0 / ts.total_revenue) AS segment_revenue_percent,
+    (ss.segment_revenue * 1.0/ ss.segment_users) AS arpu
+from 
+    segment_stats ss, total_stats ts;
+            
+        
+           
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
