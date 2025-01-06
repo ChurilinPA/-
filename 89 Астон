@@ -1,0 +1,65 @@
+89 Астон
+
+1) 
+
+with cte as (select name,
+                    sum(volume_sales) as total_sales,
+            from org
+            group by name
+            ),
+cte_rank as (select name,
+                    total_sales,
+                    row_number() over (order by total_sales desc) as rank
+             from cte
+            ),
+   top_5 as (select name,
+                    total_sales
+             from cte_rank
+             where rank <= 5
+            ),
+    other as(select name,
+                    sum(total_sales) as total_sales
+             from cte_rank
+             where rank > 5
+             group by name
+             )
+            
+            select  name,
+                    total_amount
+            from top_5
+            UNION ALL 
+            select 'Other',
+                    total_sales
+            from other
+            
+2) 
+
+select a.dt, (select count(*) from tab b where b.dt >= a.dt) as rank
+from tab a
+order by a.dt desc
+
+3)
+
+Есть таблица с 3 и 5 строчками
+
+Сколько мин и макс строчек может быть при всех видах джоина?
+
+inner - 0, 15
+left - 3, 15
+right - 5, 15
+full -  5, 15
+cross - 15, 15 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
