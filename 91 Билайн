@@ -1,0 +1,73 @@
+91 Билайн 
+
+1) Есть таблица с оценками студентов grade_book. Необходимо вывести список студентов отличников за 2022/2023 год, и посчитать количество оценок 3.
+Отличниками считаем студентов, которые имеют более 100 оценок 5. Учебный год длится с 2022-09-01 по 2023-06-01.
+
+Структура таблицы grade_book: 
+
+student_id - ид студента 
+estimation - оценка (от 1 до 5)
+estimation_date - дата, когда поставили оценку
+
+Финальная таблица имеет вид:
+student_id
+cnt_3
+
+with cte as (
+select  student_id,
+        sum(case when estimation = 3 then 1 else 0 end) as cnt_3,
+        sum(case when estimation = 5 then 1 else 0 end) as cnt_5
+from grade_book
+where estimation_date >= '2022-09-01' and estimation_date <= '2023-06-01'
+group by student_id
+            )
+select  student_id,
+        cnt_3
+from cte
+where cnt_5 > 100
+
+2) 
+
+Есть таблицы:
+Справочник мобильных устройств (devices)
+История смен мобильных устройств пользователями (history_log)
+
+Написать запрос, который выведет модель последнего устройства у клиента (user_id / vendor_name / start_date / end_date)
+
+with t as (
+select  user_id,
+        devise_id,
+        start_date,
+        end_date,
+        row_number() over (partiiton by user_id order by start_date desc) as rank
+from history_log
+        )
+select  t.user_id,
+        d.vendor_name,
+        t.start_date,
+        t.end_date,
+from t 
+inner join devices d on t.devise_id = d.devise_id
+where rank = 1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+from 
