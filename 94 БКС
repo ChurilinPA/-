@@ -79,6 +79,78 @@ from cte
 where rank = 1
 
 
+94 БКС 
+
+
+4) 
+
+with cte as (select customer_id,
+                    sum(amount_rur) as amount_rur
+            from transactions
+            where success_flg = 1
+            group by customer_id
+            having sum(amount_rur) > 10000
+            ),
+    cte2 as (select  c.transaction_id, 
+                    cte.customer_id, 
+                    cte.amount_rur, 
+                    c.trasaction_dttm,
+                    row_number() over (partition by cte.customer_id order by c.trasaction_dttm desc) as rank
+            from cte 
+            left join customer c on cte.customer_id = c.customer_id
+            )
+            select  transaction_id, 
+                    customer_id, 
+                    amount_rur, 
+                    trasaction_dttm
+            from cte2
+            where rank = 1
+
+5) Даны две таблицы - Products и Orders. Необходимо рассчитать, на какую сумму было куплено каждого продукта 01.01.2021.
+
+
+with cte as (
+select  o.product_id,
+        o.date,
+        sum(p.price * o.quantity) as total_amount
+from orders o
+inner join products p on o.product_id = p.product_id
+            and o.date >= p.date_from
+            and o.date <= p.end_from
+group by o.product_id,
+         o.date
+            )
+        seelect product_id,
+                total_amount
+        from cte
+        where date = '2021-01-01'
+        
+6) если нам нужно что бы условие влияло на процесс соединение, используем условие в ON
+7)
+
+count(*) = 7
+count(1) = 7
+count(id) = 5
+count('id') = 5
+count (NULL) = null        
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+        
+
+
+
+
 
 
 
