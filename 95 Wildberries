@@ -1,0 +1,14 @@
+95 Wildberries
+
+1) Задание. Для каждого дня требуется вывести средневзвешенное время (часы) от отгрузки
+до доставки за предыдущие 3 дня без учета текущего дня.
+
+
+
+select  dt,
+        coalesce(sum(cnt_box * time_spent) over (order by dt rows between 3 preceding and 1 preceding) / 
+         sum(cnt_box) over (order by dt rows between 3 preceding and 1 preceding), 0) as weighted_average_time
+from data
+
+
+-- задачи на временные интервалы порешать
