@@ -131,7 +131,7 @@ group by o.product_id,
 count(*) = 7
 count(1) = 7
 count(id) = 5
-count('id') = 5
+count('id') = 5       -> тут не 7 будет ? строковый литерал
 count (NULL) = null        
          
          
