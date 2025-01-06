@@ -1,0 +1,74 @@
+92 Точка банк 
+
+1) найти сумму первой покупки каждого клиента
+
+id
+time_purchases
+sum_purchases
+
+with cte as (
+select id,
+       sum_purchases,
+       row_number() over (partition by id order by sum_purchases) as rank
+from table 
+            )
+select  id,
+        sum_purchases
+from cte
+where rank = 1
+
+------------
+
+with cte as (
+select  id,
+        min(time_purchases) as first_purchases
+from table
+group by id
+            )
+select  t.id, 
+        t.sum_purchases
+from table t
+join cte c on t.id = c.id and t.time_purchases = c.first_purchases
+
+2) 
+
+id != 1
+2
+3
+
+id > 1
+2
+3
+
+
+3) Результат не изменится
+4) Декартово произведение 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
