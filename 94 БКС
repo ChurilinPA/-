@@ -58,6 +58,26 @@ null-3
 null-null
 null-null
 
+2) Нет, фильтрация до селекта (алиас)
+
+3) 
+user_id
+dttm
+value
+  
+with cte as (
+select  user_id, 
+        dttm,
+        value,
+        row_number() over (partition by user_id order by dttm desc) as rank
+from users
+            )
+select  user_id, 
+        dttm,
+        value
+from cte 
+where rank = 1
+
 
 
 
