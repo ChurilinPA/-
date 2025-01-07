@@ -1,0 +1,19 @@
+96 ВкуссВилл
+
+1)
+
+есть таблица с заказами orders: order_date, order_id, user_id, order_price
+так же есть таблица users: user_id, device_type (считаем что user использует только один вид устройства)
+необходимо составить запрос, который будет выводить долю в выручке по каждому типу устройства 
+
+
+select  order_date,
+        device_type,
+        total_amount * 100.0 / sum(total_amount) over () || '%'  as doly
+from (select  o.order_date,
+        u.device_type,
+        sum(order_price) as total_amount
+from orders o 
+join users u on o.user_id = u.user_id
+group by o.order_date,
+         u.device_type) as t
