@@ -1,0 +1,49 @@
+No name 4
+
+2)
+
+fact_purchases
+
+dt
+product_id
+order_id
+
+with cte as (
+select  product_id,
+        max(dt) as last_dt,
+        min(dt) as first_dt
+from fact_purchases
+where date_trunc('month', dt) = '2023-05-01' 
+group by product_id 
+            )
+select product_id
+from cte 
+where last_dt != first_dt
+
+3)
+
+
+with cte as (select date_trunc('month', order_date) as month,
+                    user_id
+             from orders
+            )
+            select user_id
+            from cte 
+            group by user_id
+            having count(distinct month) = 6
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
