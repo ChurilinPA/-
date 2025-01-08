@@ -1,0 +1,40 @@
+98 Т-банк
+
+1) Для каждого пальтователя в таблице  user_logs  выберите посладною запись по полю dttm
+
+user_id
+dttm
+action
+
+select  user_id,
+        dttm,
+        action
+from (select user_id,
+        dttm,
+        action,
+        row_number() over (partition by user_id order by dttm desc) as rank
+from user_logs) as t
+where rank = 1
+
+
+2) 
+
+with first_order as (select user_id,
+                            min(order_day) as first_order_day
+                     from orders
+                     group by user_id
+                    ),
+      last_order as (select o.user_id,
+                            o.order_day,
+                            o.order_sum,
+                            row_number() over (partition by o.user_id, c.calendar_dt order by o.order_day desc) as rank
+                     from orders o 
+                     join calendar c on o.order_day <= c.calendar_dt
+                    )
+                    select  f.user_id,
+                            c.calendar_dt,
+                            order_sum
+                    from calendar c
+                    cross join first_order f
+                    left join last_order l on c.calendar_dt >= f.first_order_day and l.user_id = f.user_id and l.rank = 1
+                    
