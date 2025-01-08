@@ -86,6 +86,24 @@ cross
 5-5
 
 
+--посчитать, какую долю этот сервис заниает от общего времени, проведенного мужчинами "В'ВК за последние 7 дней
+
+
+with cte as (
+select  service,
+        sum(timespent) as time_service
+from vk_activity va
+join vk_user_description vd on va.user_id = vd.user_id
+where dt >= now() - interval '7 days' and gender = 'M'
+group by service
+            )
+select  service,
+        time_service / sum(time_service) over () as doly
+from cte
+order by doly desc
+limit 1
+
+
 
 
 
