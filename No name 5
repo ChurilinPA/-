@@ -1,0 +1,23 @@
+No name 5
+
+1)
+
+ATM
+
+id
+adr
+dt
+
+with cte as (
+select  id,
+        adr,
+        dt,
+        row_number() over (partition by id order by dt desc) as rank
+from ATM
+where dt <= '2023-01-01'
+            )
+select  id,
+        adr,
+        dt
+from cte 
+where rank = 1
