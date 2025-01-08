@@ -1,0 +1,129 @@
+99 VK
+
+1) найти самый популярный сервис у мужчин за последние 7 дней
+
+Таблица с активностью пользователей в сервисах ВК (vk_activity):
+- айди пользователя (user_id)
+- сервис ВКонтакте (service: лента/истории/клипы/видео/ сообщения
+- количество минут, проведенных в сервисе (timespent)
+- дата (dt)
+
+Таблица с описанием пользователя (vk_user_description):
+- айди пользователя (user_id)
+- пол (gender: M / Ж)
+- возраст (age)
+
+найти самый популярный сервис у мужчин за последние 7 дней
+
+select service
+from (select  service,
+        count(user_id) as count_user
+from vk_activity va
+join vk_user_description vd on va.user_id = vd.user_id
+where dt >= now() - interval '7 days' and gender = 'M' 
+group by service) as t
+order by count_user desc
+limit 1 
+
+
+2) Сколько строчек будет после всех видов JOIN’a?
+
+А B
+1 1
+2 1
+3 3
+4 5
+5
+
+inner
+1-1
+1-1
+3-3
+5-5
+
+left
+1-1
+1-1
+2-null
+3-3
+4-null
+5-5
+
+right
+1-1
+1-1
+3-3
+5-5
+
+full
+1-1
+1-1
+2-null
+3-3
+4-null
+5-5
+
+cross
+1-1
+1-1
+1-3
+1-5
+2-1
+2-1
+2-3
+2-5
+3-1
+3-1
+3-3
+3-5
+4-1
+4-1
+4-3
+4-5
+5-1
+5-1
+5-3
+5-5
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
