@@ -1,0 +1,62 @@
+No name 1 
+
+1) 
+
+5
+7
+3
+4
+
+sum(a) = 19
+count(a) = 4
+count(*) = 4
+count(distinct a) = 4
+max(a) = 7
+min(a) = 3
+
+
+2) Рассчитать количество публикаций в мослц с указанием первой даты меслца и долей изменения количества публикаций относительно предыдущего месяца.
+
+id
+created_at
+title
+
+        with cte as (select date_trunc('month', created_at) as dt,
+                            count(title) as count
+                     from table
+                     group by date_trunc('month', created_at)
+                    )
+                    select  dt,
+                            count,
+                            case when lag(count) over (order by dt) = 0 then 'N/A'
+                                 when lag(count) over (order by dt) IS NULL then '0%'
+                                 else round((count - lag(count) over (order by dt)) / lag(count) over (order by dt) * 100.0, 2 || '%') end as Prcnt_growth
+                    from cte 
+                    
+        -----------------------------------
+        
+        
+        with cte as (select date_trunc('month', created_at) as dt,
+                            count(title) as count
+                     from table
+                     group by date_trunc('month', created_at)
+                    )
+                    select  dt,
+                            count,
+                            (count - lag(count) over (order by dt)) / lag(count) over (order by dt) * 100.0 || '%' as Prcnt_growth
+                    from cte 
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
