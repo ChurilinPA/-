@@ -1,0 +1,15 @@
+No name 9
+
+1)
+
+select  ProductName,
+        count,
+        TotalAmount,
+        dense_rank() over (order by count desc) as rank
+from (select  p.ProductName,
+        count(o.orderId) as count,
+        sum(p.price) as TotalAmount
+from orders o
+join products p on o.productId = p.productId
+group by p.ProductName) as t
+order by count desc
