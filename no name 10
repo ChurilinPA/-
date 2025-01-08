@@ -1,0 +1,34 @@
+No name 10
+
+1) 
+
+
+select  transaction_date,
+        sum(transaction_sum) as total_amount
+from money
+group by transaction_date
+
+
+2) 
+
+select  transaction_date,
+        sum(total_amount) over (order by transaction_date) as cum_sum
+from (select  transaction_date,
+        sum(transaction_sum) as total_amount
+from money
+group by transaction_date) as t
+
+----- тут накопительную сумму от дня ко дню же или по каждой транзакиции ?
+
+
+select  transaction_date,
+        sum(transaction_sum) over (order by transaction_date) as cum_sum
+from money
+
+
+
+3) 
+
+select transaction_date,
+        sum(transaction_sum) over () as total_sum
+from money
