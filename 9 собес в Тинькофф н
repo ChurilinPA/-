@@ -50,3 +50,51 @@ select transaction_id
 from cte
 where amount_rur > prev_amount and amount_rur > next_amount
 
+3)
+
+create table client
+id integer, -- ID клиента
+name varchar 100) -- имя клиента
+
+create table account
+id integer, -- ID счета
+client_id integer, -- ID клиента 
+open_dt date, -- дата открытия счета
+close_dt date -- дата закрытия счета
+
+create table transaction
+id integer, -- ID транзакции
+account_id integer, -- ID счета 
+transaction_date date, -- дата транзакции 
+amount numeric (10,2), -- сумма транзакции
+type varchar(3) -- тип транзакции
+
+Вывести имена клиентов, у которых есть как минимум один активный счет, открытый больше года назад, и которые за
+последний месяц по всем своим счетам совершили покупок меньше, чем на 5000 рублей.
+
+
+with cte as (
+select  
+        a.id,
+        c.name
+from client c 
+join account a on c.id = a.client_id and a.open_dt <= now() - interval '1 year'
+            ),
+            
+with cte1 as (select account_id
+                from transaction
+                where transaction_date >= now() - interval '1 month' and type = 'buy'
+                group by account_id
+                having sum(amount) < 5000
+            )
+            select name
+            from cte
+            left join cte1 on cte.id = cte1.account_id
+            
+            
+            
+            
+            
+            
+            
+
