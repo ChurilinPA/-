@@ -1,0 +1,68 @@
+WITH RankedMessages AS ( 
+    select  entity_id, 
+            created_by, 
+            created_at, 
+            type,     
+            row_number() over (partition by entity_id, created_by order by created_at) as rank
+    from test.chat_messages
+                        ),        
+FilteredMessages AS ( 
+    select  rm1.entity_id,       
+            rm2.created_by, 
+            rm1.created_at AS message_time, 
+            rm2.created_at AS response_time 
+    from RankedMessages rm1
+    join RankedMessages rm2 on rm1.entity_id = rm2.entity_id  
+        and rm1.type = 'incoming_chat_message' and rm2.type = 'outgoing_chat_message' 
+        and rm1.rank = 1 and rm2.rank = 1  
+        and rm2.created_at > rm1.created_at 
+                        ),                
+TimeDiff as ( 
+    select  entity_id,
+            created_by,
+            message_time, 
+            response_time, 
+            extract(epoch from (to_timestamp(response_time) - to_timestamp(message_time))) as time_diff -- Разница в секундах
+    from FilteredMessages
+            ),
+AdjustedTime AS (
+    select  entity_id,
+            created_by,
+            message_time,
+            response_time,
+            time_diff,
+            case 
+                when extract(hour from to_timestamp(message_time)) < 9 or extract(hour from to_timestamp(message_time)) = 9 and extract(minute from to_timestamp(message_time)) < 30 then
+                    case 
+                        when extract(hour from to_timestamp(response_time)) >= 9 and extract(hour from to_timestamp(response_time)) < 24 then 
+                            extract(epoch from (to_timestamp(response_time) - to_timestamp(message_time + (9 * 3600 - extract(minute from to_timestamp(message_time)) * 60))))
+                        else
+                            extract(epoch from (to_timestamp(response_time + 24 * 3600) - to_timestamp(message_time + (9 * 3600 - extract(minute from to_timestamp(message_time)) * 60))))                            
+                    end
+                when extract(hour from to_timestamp(message_time)) >= 24 then
+                    case
+                        when extract(hour from to_timestamp(response_time)) >= 9 and extract(hour from to_timestamp(response_time)) < 24 then
+                            extract(epoch from (to_timestamp(response_time) - to_timestamp(message_time + (9 * 3600 - extract(monute from to_timestamp(message_time)) * 60))))
+                        else 
+                            extract(epoch from (to_timestamp(response_time + 24 * 3600) - to_timestamp(message_time + (9 * 3600 - extract(minute from to_timestamp(message_time)) * 60))))                    
+                    end
+                when extract(hour from to_timestamp(message_time)) >= 9 and extract(hour from to_timestamp(message_time)) < 24 then
+                    case 
+                        when extract(hour from to_timestamp(response_time)) < 9 then 
+                        extract(epoch from (to_timestamp(response_time + 24 * 3600) - to_timestamp(message_time)))
+                        else time_diff 
+                    end
+                else time_diff 
+            end as adjusted_time_diff
+    from TimeDiff
+                   ),           
+ManagerAverages AS ( 
+        select  m.name_mop, 
+                round(avg(at.adjusted_time_diff), 3) as average_response_time 
+        from AdjustedTime at  
+        join test.managers m ON at.created_by = m.mop_id 
+        group by m.name_mop 
+                    )
+        select *
+        from ManagerAverages
+        order by average_response_time desc 
