@@ -42,7 +42,7 @@ AdjustedTime AS (
                 when extract(hour from to_timestamp(message_time)) >= 24 then
                     case
                         when extract(hour from to_timestamp(response_time)) >= 9 and extract(hour from to_timestamp(response_time)) < 24 then
-                            extract(epoch from (to_timestamp(response_time) - to_timestamp(message_time + (9 * 3600 - extract(monute from to_timestamp(message_time)) * 60))))
+                            extract(epoch from (to_timestamp(response_time) - to_timestamp(message_time + (9 * 3600 - extract(minute from to_timestamp(message_time)) * 60))))
                         else 
                             extract(epoch from (to_timestamp(response_time + 24 * 3600) - to_timestamp(message_time + (9 * 3600 - extract(minute from to_timestamp(message_time)) * 60))))                    
                     end
