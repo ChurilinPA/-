@@ -27,3 +27,26 @@ with t1 as (select  t.customer_id,
             select transaction _id, customer_id, amount_rur, transaction_ttm
             from t1
             where rank = 1
+
+
+2) Вывести все транзакции, amount_rur которых больше предыдущей и последующей транзакции по этому клиенту.
+
+transaction_id integer, -- ID транзакции
+customer_id integer, -- ID клиента
+amount_rur numeric(10,2), -- сумма транзакции
+success_flg boolean, -- флаг успешности транзакции
+transaction_dttm timestamp without time zone -- дата и время транзакции
+
+
+with cte as (
+select  transaction_id,
+        customer_id,
+        amount_rur, 
+        lag(amount_rur, 1, 0) over (partition by customer_id order by transaction_id) as prev_amount,
+        lead(amount_rur, 1, 0) over (partition by customer_id order by transaction_id) as next_amount
+from transaction
+            )
+select transaction_id
+from cte
+where amount_rur > prev_amount and amount_rur > next_amount
+
