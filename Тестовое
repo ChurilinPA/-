@@ -1,0 +1,79 @@
+WITH RankedMessages AS ( -- Нумерует сообщения внутри каждой сделки
+	select  entity_id, -- id сделки
+			created_by, -- id отправителя
+			created_at, -- время создания Unix Timestamp
+			type, -- Тип сообщения ('incoming_chat_message' или 'outgoing_chat_message')	
+			row_number() over (partition by entity_id, created_by order by created_at) as rank
+	from test.chat_messages
+						),		
+FilteredMessages AS ( -- Выбирает пары "входящее сообщение - исходящее сообщение"
+	select  rm1.entity_id,       -- ID сделки
+        	rm2.created_by, -- ID менеджера
+        	rm1.created_at AS message_time, -- Время входящего сообщения
+        	rm2.created_at AS response_time -- Время исходящего сообщения (ответа)
+    from RankedMessages rm1
+    join RankedMessages rm2 on rm1.entity_id = rm2.entity_id  -- соединяем по ID сделки
+    	and rm1.type = 'incoming_chat_message' and rm2.type = 'outgoing_chat_message' -- входящие - сходящие
+    	and rm1.rank = 1 and rm2.rank = 1 -- берем первые строки 
+    	and rm2.created_at > rm1.created_at -- время ответа должно быть позже сообщения
+    					),				
+TimeDiff as ( -- Вычисляет разницу во времени между сообщением и ответом (в секундах) без учета рабочего времени
+	select  entity_id,-- ID сделки
+			created_by,
+			message_time, -- Время входящего сообщения
+			response_time, -- Время исходящего сообщения
+			extract(epoch from (to_timestamp(response_time) - to_timestamp(message_time))) as time_diff -- Разница в секундах
+	from FilteredMessages
+			),
+AdjustedTime AS ( -- Корректируем разницу во времени с учетом рабочего времени (с 09:30 до 00:00)
+	select  entity_id,
+			created_by,
+			message_time,
+			response_time,
+			time_diff,
+			case -- если сообщение отправлено до 09:30
+				when extract(hour from to_timestamp(message_time)) < 9 or extract(hour from to_timestamp(message_time)) = 9 and extract(minute from to_timestamp(message_time)) < 30 then
+					case -- если ответ дан в пределах рабочего дня с 9:30
+						when extract(hour from to_timestamp(response_time)) >= 9 and extract(hour from to_timestamp(response_time)) < 24 then 
+						-- сдвигаем время на 9:30
+							extract(epoch from (to_timestamp(response_time) - to_timestamp(message_time + (9 * 3600 - extract(minute from to_timestamp(message_time)) * 60))))
+						-- если ответ дан на следующий день (после 00:00)
+						else
+							extract(epoch from (to_timestamp(response_time + 24 * 3600) - to_timestamp(message_time + (9 * 3600 - extract(minute from to_timestamp(message_time)) * 60))))							
+					end
+					-- Если сообщение отправлено после полуночи предыдущего дня
+				when extract(hour from to_timestamp(message_time)) >= 24 then
+					case
+						-- Если ответ дан в пределах рабочего дня (после 09:30)
+						when extract(hour from to_timestamp(response_time)) >= 9 and extract(hour from to_timestamp(response_time)) < 24 then
+						-- Сдвигаем время начала отсчета на 09:30
+							extract(epoch from (to_timestamp(response_time) - to_timestamp(message_time + (9 * 3600 - extract(monute from to_timestamp(message_time)) * 60))))
+						-- Если ответ дан на следующий день (после 00:00)
+						else 
+							extract(epoch from (to_timestamp(response_time + 24 * 3600) - to_timestamp(message_time + (9 * 3600 - extract(minute from to_timestamp(message_time)) * 60))))					
+					end
+					-- Если сообщение отправлено в пределах рабочего дня (после 09:30 и до 00:00)
+				when extract(hour from to_timestamp(message_time)) >= 9 and extract(hour from to_timestamp(message_time)) < 24 then
+					case 
+						-- Если ответ дан до 09:30 следующего дня
+						when extract(hour from to_timestamp(response_time)) < 9 then 
+						-- Прибавляем сутки к времени ответа
+						extract(epoch from (to_timestamp(response_time + 24 * 3600) - to_timestamp(message_time)))
+						-- Если ответ дан в пределах рабочего дня
+						else time_diff 
+					end
+					-- В остальных случаях (сообщение и ответ в пределах рабочего дня)
+				else time_diff 
+					-- В остальных случаях (сообщение и ответ в пределах рабочего дня)		
+			end as adjusted_time_diff -- Скорректированная разница во времени
+	from TimeDiff
+				   ),		   
+ManagerAverages AS ( -- Вычисляет среднее скорректированное время ответа для каждого менеджера
+		select  m.name_mop, -- Имя менеджера
+				avg(at.adjusted_time_diff) as average_response_time -- Среднее время ответа в секундах
+		from AdjustedTime at  -- разницы во времени
+		join test.managers m ON at.created_by = m.mop_id -- соединение по id
+		group by m.name_mop -- группировка по имени менеджера
+					)
+		select *
+		from ManagerAverages
