@@ -1,0 +1,29 @@
+9 Собес в тинькофф
+
+1) Вывести первую успешную транзакцию по каждому клиенту, сумма успешных транзакций которого > 100000. На выходе:
+transaction _id, customer_id, amount_rur, transaction_ttm.
+
+transaction_id integer, -- 10 ранзакции
+customer_id integer, -- ID клиента
+amount_rur numeric(10,2), -- сумма транзакции
+success_flg boolean, -- флаг успешности транзакции
+transaction_dttm timestamp without time zone -- дата и время транзакции
+
+
+with t as (select  customer_id
+            from transaction
+            where success_flg = 1
+            group by customer_id
+            having sum(amount_rur) > 100000
+            ),
+with t1 as (select  t.customer_id,
+                    tn.transaction_id,
+                    tn.amount_rur,
+                    tn.transaction_ttm,
+                    row_number() over (partition by t.customer_id order by tn.transaction_ttm) as rank
+            from t 
+            left join transaction tn on t.customer_id = tn.customer_id
+            )
+            select transaction _id, customer_id, amount_rur, transaction_ttm
+            from t1
+            where rank = 1
