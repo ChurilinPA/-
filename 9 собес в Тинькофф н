@@ -90,8 +90,34 @@ with cte1 as (select account_id
             select name
             from cte
             left join cte1 on cte.id = cte1.account_id
-            
-            
+
+4) 
+
+Есть таблица competition с двумя полями: id (id спортсмена), points (кол-во набранных баллов).
+1. Требуется для каждого спортсмена вывести его позицию в общем рейтинге
+
+
+select  id,
+        dense_rank() over (order by points desc) as rank
+from competition
+
+--------------
+
+
+
+
+select a.id,
+        sum(case when a.points <= b.points then 0 else 1) + 1 as rank 
+from competition a
+cross join competition b
+where a.id != b.id
+group by id
+
+
+
+
+
+
             
             
             
