@@ -1,0 +1,64 @@
+WITH MessageTimings AS (
+    SELECT
+        message_id,
+        CASE WHEN created_by = 0 THEN 'incoming_chat_message' ELSE type END AS message_type,
+        entity_id,
+        created_by,
+        to_timestamp(created_at) AS created_at_datetime
+    FROM
+        test.chat_messages
+),
+PreviousMessageTimings AS (
+    SELECT
+        mt.message_id,
+        mt.message_type,
+        mt.entity_id,
+        mt.created_by,
+        mt.created_at_datetime,
+        CASE
+            WHEN mt.message_type != LAG(mt.message_type) OVER (PARTITION BY mt.entity_id ORDER BY mt.created_at_datetime) AND mt.message_type = 'outgoing_chat_message'
+            THEN LAG(mt.created_at_datetime) OVER (PARTITION BY mt.entity_id ORDER BY mt.created_at_datetime)
+            ELSE NULL
+        END AS previous_message_datetime
+    FROM MessageTimings mt
+),
+TimeDifferences AS (
+    SELECT
+        pmt.message_id,
+        pmt.message_type,
+        pmt.entity_id,
+        pmt.created_by,
+        pmt.created_at_datetime,
+        pmt.previous_message_datetime,
+        CASE
+            WHEN pmt.previous_message_datetime IS NULL THEN NULL
+            WHEN (pmt.previous_message_datetime::TIME BETWEEN '00:00:00' AND '09:30:00') AND pmt.created_at_datetime::TIME >= '09:30:00'
+            THEN pmt.created_at_datetime::TIME - '09:30:00'
+            WHEN pmt.previous_message_datetime < date_trunc('day', pmt.created_at_datetime) AND pmt.created_at_datetime >= date_trunc('day', pmt.created_at_datetime) + interval '09:30:00'
+            THEN (pmt.created_at_datetime - pmt.previous_message_datetime - interval '09:30:00')
+            ELSE (pmt.created_at_datetime - pmt.previous_message_datetime)
+        END AS time_diff,
+        DATE(pmt.created_at_datetime) AS message_date -- Дата сообщения для фильтрации
+    FROM PreviousMessageTimings pmt
+    WHERE pmt.message_type = 'outgoing_chat_message'
+      AND pmt.previous_message_datetime IS NOT NULL
+      AND pmt.created_at_datetime::TIME NOT BETWEEN '00:00:00' AND '09:30:00' -- Условие перенесено сюда
+),
+AverageTimeDifferences AS (
+    SELECT
+        td.created_by,
+        AVG(td.time_diff) AS avg_time_diff,
+        td.message_date
+    FROM TimeDifferences td
+    GROUP BY td.created_by, td.message_date
+)
+SELECT
+    m.mop_id,
+    m.name_mop,
+    r.rop_name,
+    ROUND(EXTRACT(HOUR FROM atd.avg_time_diff) * 60 + EXTRACT(MINUTE FROM atd.avg_time_diff) + EXTRACT(SECOND FROM atd.avg_time_diff) / 60, 1) AS avg_minutes_for_answer,
+    atd.message_date
+FROM AverageTimeDifferences atd
+RIGHT JOIN test.managers m ON atd.created_by = m.mop_id
+JOIN test.rops r ON CAST(m.rop_id AS INTEGER) = r.rop_id
+ORDER BY atd.message_date, avg_minutes_for_answer;
