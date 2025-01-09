@@ -1,79 +1,60 @@
-WITH RankedMessages AS ( -- Нумерует сообщения внутри каждой сделки
-	select  entity_id, -- id сделки
-			created_by, -- id отправителя
-			created_at, -- время создания Unix Timestamp
-			type, -- Тип сообщения ('incoming_chat_message' или 'outgoing_chat_message')	
-			row_number() over (partition by entity_id, created_by order by created_at) as rank
-	from test.chat_messages
-						),		
-FilteredMessages AS ( -- Выбирает пары "входящее сообщение - исходящее сообщение"
-	select  rm1.entity_id,       -- ID сделки
-        	rm2.created_by, -- ID менеджера
-        	rm1.created_at AS message_time, -- Время входящего сообщения
-        	rm2.created_at AS response_time -- Время исходящего сообщения (ответа)
-    from RankedMessages rm1
-    join RankedMessages rm2 on rm1.entity_id = rm2.entity_id  -- соединяем по ID сделки
-    	and rm1.type = 'incoming_chat_message' and rm2.type = 'outgoing_chat_message' -- входящие - сходящие
-    	and rm1.rank = 1 and rm2.rank = 1 -- берем первые строки 
-    	and rm2.created_at > rm1.created_at -- время ответа должно быть позже сообщения
-    					),				
-TimeDiff as ( -- Вычисляет разницу во времени между сообщением и ответом (в секундах) без учета рабочего времени
-	select  entity_id,-- ID сделки
-			created_by,
-			message_time, -- Время входящего сообщения
-			response_time, -- Время исходящего сообщения
-			extract(epoch from (to_timestamp(response_time) - to_timestamp(message_time))) as time_diff -- Разница в секундах
-	from FilteredMessages
-			),
-AdjustedTime AS ( -- Корректируем разницу во времени с учетом рабочего времени (с 09:30 до 00:00)
-	select  entity_id,
-			created_by,
-			message_time,
-			response_time,
-			time_diff,
-			case -- если сообщение отправлено до 09:30
-				when extract(hour from to_timestamp(message_time)) < 9 or extract(hour from to_timestamp(message_time)) = 9 and extract(minute from to_timestamp(message_time)) < 30 then
-					case -- если ответ дан в пределах рабочего дня с 9:30
-						when extract(hour from to_timestamp(response_time)) >= 9 and extract(hour from to_timestamp(response_time)) < 24 then 
-						-- сдвигаем время на 9:30
-							extract(epoch from (to_timestamp(response_time) - to_timestamp(message_time + (9 * 3600 - extract(minute from to_timestamp(message_time)) * 60))))
-						-- если ответ дан на следующий день (после 00:00)
-						else
-							extract(epoch from (to_timestamp(response_time + 24 * 3600) - to_timestamp(message_time + (9 * 3600 - extract(minute from to_timestamp(message_time)) * 60))))							
-					end
-					-- Если сообщение отправлено после полуночи предыдущего дня
-				when extract(hour from to_timestamp(message_time)) >= 24 then
-					case
-						-- Если ответ дан в пределах рабочего дня (после 09:30)
-						when extract(hour from to_timestamp(response_time)) >= 9 and extract(hour from to_timestamp(response_time)) < 24 then
-						-- Сдвигаем время начала отсчета на 09:30
-							extract(epoch from (to_timestamp(response_time) - to_timestamp(message_time + (9 * 3600 - extract(monute from to_timestamp(message_time)) * 60))))
-						-- Если ответ дан на следующий день (после 00:00)
-						else 
-							extract(epoch from (to_timestamp(response_time + 24 * 3600) - to_timestamp(message_time + (9 * 3600 - extract(minute from to_timestamp(message_time)) * 60))))					
-					end
-					-- Если сообщение отправлено в пределах рабочего дня (после 09:30 и до 00:00)
-				when extract(hour from to_timestamp(message_time)) >= 9 and extract(hour from to_timestamp(message_time)) < 24 then
-					case 
-						-- Если ответ дан до 09:30 следующего дня
-						when extract(hour from to_timestamp(response_time)) < 9 then 
-						-- Прибавляем сутки к времени ответа
-						extract(epoch from (to_timestamp(response_time + 24 * 3600) - to_timestamp(message_time)))
-						-- Если ответ дан в пределах рабочего дня
-						else time_diff 
-					end
-					-- В остальных случаях (сообщение и ответ в пределах рабочего дня)
-				else time_diff 
-					-- В остальных случаях (сообщение и ответ в пределах рабочего дня)		
-			end as adjusted_time_diff -- Скорректированная разница во времени
-	from TimeDiff
-				   ),		   
-ManagerAverages AS ( -- Вычисляет среднее скорректированное время ответа для каждого менеджера
-		select  m.name_mop, -- Имя менеджера
-				avg(at.adjusted_time_diff) as average_response_time -- Среднее время ответа в секундах
-		from AdjustedTime at  -- разницы во времени
-		join test.managers m ON at.created_by = m.mop_id -- соединение по id
-		group by m.name_mop -- группировка по имени менеджера
-					)
-		select *
-		from ManagerAverages
+WITH MessageTimings AS (
+    SELECT
+        message_id,
+        CASE WHEN created_by = 0 THEN 'incoming_chat_message' ELSE type END AS message_type,
+        entity_id,
+        created_by,
+        to_timestamp(created_at) AS created_at_datetime
+    FROM
+        test.chat_messages
+),
+PreviousMessageTimings AS (
+    SELECT
+        mt.message_id,
+        mt.message_type,
+        mt.entity_id,
+        mt.created_by,
+        mt.created_at_datetime,
+        CASE
+            WHEN mt.message_type != LAG(mt.message_type) OVER (PARTITION BY mt.entity_id ORDER BY mt.created_at_datetime) AND mt.message_type = 'outgoing_chat_message'
+            THEN LAG(mt.created_at_datetime) OVER (PARTITION BY mt.entity_id ORDER BY mt.created_at_datetime)
+            ELSE NULL
+        END AS previous_message_datetime
+    FROM MessageTimings mt
+),
+TimeDifferences AS (
+    SELECT
+        pmt.message_id,
+        pmt.message_type,
+        pmt.entity_id,
+        pmt.created_by,
+        pmt.created_at_datetime,
+        pmt.previous_message_datetime,
+        CASE
+            WHEN (pmt.previous_message_datetime::TIME BETWEEN '00:00:00' AND '09:30:00') AND pmt.created_at_datetime::TIME >= '09:30:00'
+            THEN pmt.created_at_datetime::TIME - '09:30:00'
+            WHEN pmt.previous_message_datetime < date_trunc('day', pmt.created_at_datetime) AND pmt.created_at_datetime >= date_trunc('day', pmt.created_at_datetime) + interval '09:30:00'
+            THEN (pmt.created_at_datetime - pmt.previous_message_datetime - interval '09:30:00')
+            ELSE (pmt.created_at_datetime - pmt.previous_message_datetime)
+        END AS time_diff
+    FROM PreviousMessageTimings pmt
+    WHERE pmt.created_at_datetime::TIME NOT BETWEEN '00:00:00' AND '09:30:00'
+      AND pmt.message_type = 'outgoing_chat_message'
+      AND pmt.previous_message_datetime IS NOT NULL 
+),
+AverageTimeDifferences AS (
+    SELECT
+        td.created_by,
+        AVG(td.time_diff) AS avg_time_diff
+    FROM TimeDifferences td
+    GROUP BY td.created_by
+)
+SELECT
+    m.mop_id,
+    m.name_mop,
+    r.rop_name,
+    ROUND(EXTRACT(HOUR FROM atd.avg_time_diff) * 60 + EXTRACT(MINUTE FROM atd.avg_time_diff) + EXTRACT(SECOND FROM atd.avg_time_diff) / 60, 1) AS avg_minutes_for_answer
+FROM AverageTimeDifferences atd
+RIGHT JOIN test.managers m ON atd.created_by = m.mop_id
+JOIN test.rops r ON CAST(m.rop_id AS INTEGER) = r.rop_id
+ORDER BY avg_minutes_for_answer;
