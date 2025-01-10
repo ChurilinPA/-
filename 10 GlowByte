@@ -1,0 +1,99 @@
+10 GlowByte
+
+1) 
+left
+1-1
+1-1
+2-2
+2-2
+2-2
+2-2
+3-3
+4-null
+null-null
+
+inner
+1-1
+1-1
+2-2
+2-2
+2-2
+2-2
+3-3
+
+2) Имеется таблица journal с учениками, 2 поля (ФИО точно идентифицирует ученика)
+Опредепить количество двоек для учеников у которых десять и больше пятерок.
+
+
+with cte as (
+select  fio,
+        sum(case when mark = 2 then 1 else 0 end) as mark_2,
+        sum(case when mark = 5 then 1 else 0 end) as mark_5
+from journal
+group by fio
+            )
+            select  fio,
+                    mark_2
+            from cte 
+            where mark_5 >= 10
+                    
+3)
+
+
+select  товар,
+        дата с,
+        lead(дата с, 1, 31.12.9999) over (partition by Товар order by дата с) - 1 as Дата по,
+        цена
+from table
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
