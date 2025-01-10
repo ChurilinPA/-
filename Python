@@ -1,0 +1,67 @@
+import pandas as pd
+import warnings
+warnings.filterwarnings("ignore")
+
+# Загрузка данных
+df_chat = pd.read_csv('Data/chat_messages.csv')
+df_managers = pd.read_csv('Data/managers.csv')
+df_rops = pd.read_csv('Data/rops.csv')
+
+# Создаем копию DataFrame
+df = df_chat.copy()
+
+# Обработка типов сообщений (как в исходном коде)
+df['type'] = df.apply(lambda x: 'incoming_chat_message' if (x.created_by == 0) & (x.type == 'outgoing_chat_message') else x.type, axis=1)
+
+# Преобразование времени в datetime (с учетом часового пояса)
+df['created_at'] = df['created_at'].apply(lambda x: pd.Timestamp(x, unit='s', tz='Europe/Moscow'))
+
+# Сортировка по entity_id и времени
+df = df.sort_values(by=['entity_id', 'created_at'])
+
+# Определение времени вопроса (как в исходном коде)
+df['previous_time'] = df.groupby('entity_id')['created_at'].shift()
+df['question_time'] = df.apply(lambda x: x['previous_time'] if (x['type'] != x['previous_time']) & (x['type'] == 'outgoing_chat_message') else None, axis=1)
+df = df.drop(['previous_time'], axis=1)
+
+# Фильтрация (как в исходном коде) + сохранение даты для дальнейшего использования
+df['message_date'] = df['created_at'].dt.date
+df = df[(df['question_time'].notna()) & (df['type'] == 'outgoing_chat_message') & (~df['created_at'].dt.time.between(pd.Timestamp('00:00:00').time(), pd.Timestamp('09:30:00').time()))]
+
+# Функция расчета разницы во времени (как в исходном коде)
+def calculate_time_diff(row):
+    q_time = row['question_time']
+    a_time = row['created_at']
+    work_time_start = a_time.normalize() + pd.Timedelta(hours=9, minutes=30)
+    if (q_time >= a_time.normalize()) and (q_time < work_time_start) and (a_time >= work_time_start):
+        return a_time - work_time_start
+    elif q_time < a_time.normalize() and a_time >= work_time_start:
+        return a_time - q_time - pd.Timedelta(hours=9, minutes=30)
+    else:
+        return a_time - q_time
+
+df['time_diff'] = df.apply(calculate_time_diff, axis=1)
+
+# Расчет разницы в минутах
+df['time_diff_min'] = round(df['time_diff'].astype('timedelta64[s]') / 60, 1)
+
+# Расчет среднего времени ответа
+df['avg_time_diff_min'] = df.groupby(['created_by', 'message_date'])['time_diff_min'].transform('mean')
+
+# Объединение с таблицами managers и rops + убираем лишние столбцы
+df_final = pd.merge(df, df_managers, left_on='created_by', right_on='mop_id', how='right')
+df_final = pd.merge(df_final, df_rops, on='rop_id', how='inner')
+df_final = df_final[['mop_id', 'name_mop', 'rop_name', 'avg_time_diff_min', 'message_date']].drop_duplicates()
+
+# Вывод результата
+print(df_final.sort_values(['message_date', 'avg_time_diff_min']))
+
+
+# Для создания дашборда в DataLens, сохраните df_final в CSV или другом формате, поддерживаемом DataLens.
+df_final.to_csv('avg_response_time.csv', index=False) #сохраняем в csv
+
+#Дальнейшие шаги в DataLens:
+#1. Создать подключение к источнику данных (например, файлу csv, базе данных)
+#2. Создать датасет на основе подключения
+#3. Создать чарты (таблицы, графики)
+#4. Создать дашборд и добавить на него чарты и фильтры по name_mop, rop_name, message_date
