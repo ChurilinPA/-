@@ -54,15 +54,19 @@ where rank = 2
 
 4) Таблица остается той же
 
-Для сотрудников с минимальной зарплатой (3 минимальных значения ЗП) в разрезе всей компании в мае 2023 найти разницу с зарплатой в предыдущем месяце
-фио, разницу
-
-
-select  date_trunc('month', VALUE_DAY) as month,
-        EMPL_FIO,
-        
-        
-
+with cte as (
+select  EMPL_FIO,
+        date_trunc('month', VALUE_DAY) as month
+        min(AMOUNT) as min_salary
+from salary
+group by EMPL_FIO,
+         date_trunc('month', VALUE_DAY)  
+order by min_salary
+limit 3
+        )
+select EMPL_FIO,
+       min_salary - lag(min_salary) over (order by month) as diff_salary
+from cte
 
 
 
