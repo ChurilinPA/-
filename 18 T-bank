@@ -1,0 +1,6 @@
+18 T-bank HR
+
+1) over
+2) можно 
+3) group by -> having count() > 1 или через row_number 
+4) min=10, max = 50 
