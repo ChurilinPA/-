@@ -1,0 +1,15 @@
+16 DataGo
+
+1) 
+
+when cte as (
+select  date_trunc('week', hitTime) as week_date,
+        count(hitId) as count_hit
+from hits
+group by date_trunc('week', hitTime)  
+            )
+select  week_date,
+        count_hit,
+        lag(count_hit) over (order by week_date) as prev_count_hit
+from cte 
+
