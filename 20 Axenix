@@ -1,0 +1,17 @@
+20 Axenix
+
+create table employee
+(
+id integer, -- ID сотрудника
+department_id integer, -- ID подразделения, в котором работает сотрудник 
+chief _fig boolean, -- флаг того, что сотрудник занимает руководящую позицию
+birth_dt date -- дата рождения 
+
+Вывести список сотрудников, которые старше своего непосредственного руководителя.
+
+select e.id
+from employee e
+inner join employee m on e.department_id = m.department_id and m.chief_fig = 1
+where e.chief_fig = 0 and e.birth_dt < m.birth_dt
+
+
