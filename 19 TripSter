@@ -1,0 +1,38 @@
+19 TripSter 
+
+1) 
+
+select  o.order_date::date as date,
+        p.name,
+        count(o.payment_day) as count
+from orders o
+join platforms p on o.platform = p.platform
+group by o.order_date::date,
+         p.name
+         
+2)
+
+select  experience_id,
+        count(order_id)
+from orders
+group by experience_id
+order by count(order_id) desc  
+limit 5
+
+
+select experience_id
+from (select experience_id,
+        dense_rank() over (order by count desc) as rk
+from (select experience_id,
+       count(order_id) as count
+from orders 
+group by experience_id) as t) as t1
+where rank <= 5
+
+3) Список пользователей, у которых больше чем 1 заказ в статусе Зобронировано
+
+select user_id
+from orders
+where order_status = 'Забронировано'
+group by user_id
+having count(order_id) > 1 
