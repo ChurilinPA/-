@@ -1,0 +1,30 @@
+21 Ламода 
+  
+  client_id  | category | order_id   | value
+айди клиента, категория, айди заказа и сумма купленных товаров в определенном заказе по определенной категории
+
+например
+101 | молочная продукция | 183 | 201
+
+Вывести клиентов, совершивших покупки во всех категориях и их доли трат в каждой категории от общей суммы трат
+
+with cte as (
+            select  client_id,
+                    category,
+                    sum(value) as sum_category
+            from orders
+            group by client_id,
+                     category
+            having count(category) = (select count(distinct category) from orders)
+            ),
+with cte_2 as (
+            select  clietn_id,
+                    category,
+                    sum_category,
+                    sum(sum_category) over (partition by clietn_id) as total_amount
+            from cte
+            )
+            select  client_id,
+                    category,
+                    sum_category / total_amount as doly
+            from cte_2
