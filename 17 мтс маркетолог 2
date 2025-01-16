@@ -1,0 +1,43 @@
+17 МТС маркетолог
+
+1) Сколько на каждом тарифе (tariff) абонентов
+
+select  tariff,
+        count(abonent_id) as quantity_user
+from abnt
+group by tariff
+
+2) Какой в разрезе тарифов средний размер начислений (all_clc) в мае’19
+
+select a.tariff,
+       avg(c.all_clc) as average_size_amount
+from abnt a
+join clcd c on a.abonent_id = c.abonent_id
+where date_trunc('month', c.table_business_month) = '2019-05-01'
+group by a.tariff
+
+3) Какой в разрезе тарифов средний объём потребляемого трафика (data_traffic_GB) в апреле’19;
+
+select tariff,
+        avg(t.data_traffic_GB) as 
+from abnt a 
+join traf t on a.abonent_id = t.abonent_id
+where date_trunc('month', t.table_business_month) = '2019-04-01'
+group by tariff
+
+4) Какое распределение абонентской базы по периоду активации (activation_date) – здесь предлагаю разбить на 5 групп, определив эти группы по своему усмотрению
+
+
+with group_abon as (
+select *,
+        case when now() - activation_date <= 7 then 'less_week'
+             when now() - activation_date <= 30 then 'less_month'
+             when now() - activation_date <= 90 then 'less_quarter'
+             when now() - activation_date <= 180 then 'less_half_year'
+             else 'more_half_year' end as groups
+from abnt
+        )
+select groups,
+        count(abonent_id)
+from group_abon
+group by groups
