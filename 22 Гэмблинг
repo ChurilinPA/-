@@ -35,9 +35,23 @@ group by fs.client_id
             where total_weight > 2
             
 
+
 3) Нужно посчитать накопительную сумму купленных клиентом товаров 
 
 
+with cte as (
+select  fs.client_id,
+        fs.dttm::date as date,
+        sum(fs.sku_cnt*ds.price) as total_price
+from fct_sales fs
+join dim_sku ds on fs.sku_id = ds.sku_id
+group by fs.client_id,
+         fs.dttm::date
+            ),
+select  client_id,
+        date,
+        sum(total_price) over (partition by client_id order by date) as cum_sum
+from cte 
 
 
 
