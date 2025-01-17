@@ -1,0 +1,24 @@
+Дана таблица employee.
+
+id - id сотрудника
+
+name - Имя сотрудника
+
+salary - з.п.
+
+Напишите запрос, который выведет сотрудников с максимальной з.п.
+
+
+select id
+from employee
+where salary = (select max(salary) from employee)
+
+
+
+
+
+
+
+
+
+
