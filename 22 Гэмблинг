@@ -1,0 +1,54 @@
+ 22 Гемблинг
+
+1) Дана таблица table с колонкой col, Найти второй по величине элемент в таблице.
+
+[1, 2, 3, 5, 5] -> 3
+
+select max(col)
+from table 
+where col < (select max(col) from table)
+-------------------------------------------
+
+with cte as (
+select col,
+        dense_rank() over (order by col desc) as rank
+from table
+            )
+select col
+from cte
+where rank = 2 
+
+
+2) 
+
+
+with cte AS (
+select  fs.client_id,
+        sum(fs.sku_cnt * ds.weight) as total_weight
+from fct_sales fs
+join dim_sku ds on fs.sku_id = ds.sku_id
+where fs.dttm::date >= now() - interval '1 month'
+group by fs.client_id
+            )
+            SELECT client_id
+            from cte 
+            where total_weight > 2
+            
+
+3) Нужно посчитать накопительную сумму купленных клиентом товаров 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
