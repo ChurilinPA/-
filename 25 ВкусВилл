@@ -1,0 +1,42 @@
+25 ВкусВилл
+
+1)  
+Представим, что дана таблица orders, содержащая список заказов
+за последние полные 6 месяцев, с полями:
+order_date - дата заказац
+order_id - id заказа (уникальный)
+user_id - id пользователя совершившего заказ
+order_price - стоимость заказа 
+Требуется написать sql запрос возвращающий список пользователей совершавших заказы 6 месяцев подряд
+
+with cte as (select date_trunc('month', order_date)) as date,
+                    user_id
+            from orders
+            )
+            select user_id
+            from cte 
+            group by user_id
+            having count(distinct date) = 6
+
+
+2)
+есть таблица с названием команды (team) и количеством очковув некоем турнире (points).
+надо написать скрипт, который выведет место этой команды в турнирной таблице.
+2* - сделать то же самое, не прибегая к сортировке и оконным функциям
+
+select  a.team,
+        sum(case when a.points <= b.points then 0 else 1 end) + 1 as rank
+from table a, table b
+where a.points != b.points
+group by a.team
+
+--------------------
+with cte as (
+select  team,
+        points,
+        dense_rank() over (order by points desc) as rank
+from table 
+            )
+select rank
+from cte 
+where team = 'name'
