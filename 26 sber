@@ -1,0 +1,47 @@
+26 Сбер
+
+1)Для каждого департамента (DEPARTMENT) вывести его название и имя сотрудника (EMPLOYEE),
+работающего в этом департаменте и имеющего максимальный id
+
+select d.name,
+        e.name
+from department d
+join employee e ON d.id = e.department_id
+where e.id = (select MAX( e.id ) from employee e2 where e2.department_id = e.department_id)
+
+2) Вывести названия департаментов (DEPARTMENT), в которых нет сотрудников, имеющих в имени букв z и w одновременно без учета регистра.
+
+select DISTINCT d.name
+from department d
+left join employee e ON d.id = e.department_id
+and ( e.name LIKE '%[Zz]%[wW]%' OR e.name LIKE '%[wW]%[zZ]%')
+where e.name is null
+
+3) Для каждого сотрудника вывести его имя, а также имя и зарплату другого сотрудника, имеющего следующую по возрастанию зарплату и работающего в том же отделе. 
+В случае, если таких сотрудников несколько, вывести данные по сотруднику, имеющему максимальный id.
+
+with cte as (
+select e.name ,
+LEAD( e.name ) OVER (PARTITION BY e.department_id ORDER BY e.salary) AS next_name,
+LEAD(e.salary) OVER (PARTITION BY e.department_id ORDER BY e.salary) AS next_salary,
+ROW_NUMBER() OVER (PARTITION BY e.department_id, e.salary ORDER BY e.id DESC) AS _rn
+from  employee e
+)
+SELECT * FROM _tmp WHERE _rn = 1
+
+
+4)Вывести список названий департаментов, суммарную зарплату сотрудников в департаменте и кумулятивную сумму суммарных зарплат по департаментам в порядке возрастания суммарной зарплаты.
+
+with sum_cte AS (
+select
+d.name ,
+sum(e.salary) AS sum_salary
+from department d
+left join employee e ON d.id = e.department_id
+group by e.department_id
+)
+select
+name,
+sum_salary,
+sum(sum_salary) OVER (ORDER BY sum_salary) AS sum_amount
+from sum_cte
