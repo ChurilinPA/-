@@ -1,0 +1,35 @@
+41 
+
+1) Дана таблица Orders, Необходимо написать запрос для команды маркетинга,
+который выявит всех клиентов, кто купил iPhone, но не купил Airpods, чтобы
+отправить им маркетинговое предложение.
+
+с join
+
+with a as (
+select customer_name 
+from orders 
+where prod_name = 'iPhone'
+            ),
+with b as (
+select customer_name 
+from orders
+where prod_name = 'Airpods'
+            )
+select a.customer_name
+from a
+left join b on a.customer_name = b.customer_name
+where b.customer_name is null 
+
+без join
+
+with cte as (
+select  customer_name,
+        sum(case when prod_name = 'iPhone' then 1 else 0 end) as iPhone,
+        sum(case when prod_name = 'Airpods' then 1 else 0 end) as Airpods
+from orders 
+group by customer_name 
+            )
+select customer_name
+from cte 
+where iPhone > 0 and Airpods = 0 
