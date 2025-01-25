@@ -1,0 +1,16 @@
+39 Сбер
+
+1) Выведите пассажиров с самым длинным ФИО. Пробелы, дефисы и точки считаются частью
+имени.
+
+select name
+from Passenger 
+where length(name) = (select max(length(name)) from Passenger)
+
+2) Сколько обучающихся в 10В классе ?
+
+
+select count(student) as count_student
+from Student_in_class sc
+join Class c ON sc.class = c.id
+where class = '10 B'
