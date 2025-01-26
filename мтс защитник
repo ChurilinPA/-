@@ -1,0 +1,93 @@
+43 Мтс защитник
+
+1 Задание:
+
+1)
+
+1 А  1    А
+2 B NULL NULL
+3 C NULL NULL
+
+2) 
+
+1 A 1 A
+
+2 задание: Есть таблица в которой каждая запись действует определенный период с date_from no date_to.
+Необходимо выбрать записи которые попадают в промежуток времени с 2019-03-01 по 2021-03-01 т.е. действовали хотя бы один день на этом промежутке
+
+select appn
+from table
+where ('2019-03-01' between date_from and date_to) or ('2021-03-01' between date_from and date_to)
+
+3 задание:
+
+Необходимо написать запрос, который вернет последнюю загруженную запись по ключу id:
+
+with cte as (
+select *,
+        row_number() over (partition by id order by raw_dt desc) as rk
+from abnt  
+            )
+select *
+from cte 
+where rk = 1 
+
+
+4 задание: Представлены таблицы product (информация о том, какой категории принадлежит продукт в указанном интервале дат)
+и sale (факты продаж продукта с указанием даты продажи, цены за единицу товара и количества купленных единиц):
+
+Необходимо
+написать запрос, возвращающий общую выручку по каждой категории:
+
+select  p.prod_cat,
+        sum(s.price * s.cnt) as total_amount
+from sale s
+join product p on s.prod_nm = p.prod_nm and s.sale_dt between p.eff_dt and p.exp_dt
+group by p.prod_cat
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
