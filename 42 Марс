@@ -1,0 +1,22 @@
+42 Марс
+
+1) Какой канал помог увеличить продажи в 2021 финансовом году и какой процент вклада?
+
+with cte as (select fsm.customer_code,
+                    sum(dgp.gross _price * dgp.sold_quantity) as total_gross
+             from fact_sales_monthly fsm
+             join dim_gross_price dgp on fsm.product_code = dgp.product_code and date_part('year', fsm.date) = dgp.fiscal_year
+             where date_part('year', fsm.date) = 2021
+             group by fsm.customer_code
+            ),
+     cte2 as (select channel,
+                     sum(total_gross) / 1000000.0 as sals_mln
+              from dim_customer dc 
+              join cte on dc.customer_code = cte.customer_code
+              group by channel
+            )
+            select  channel,
+                    sals_mln,
+                    (sals_mln::decimal / (sum(sals_mln) over ())) * 100 as percentege
+            from cte2
+                    
