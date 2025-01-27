@@ -52,7 +52,7 @@ group by p.prod_cat
 select  t1.color,
         t2.color 
 from table t1
-cross join table t2
+cross join table t2                                -- какое решение правильнее ?
 where t1.color < t2.color
 
 -------------------------------
