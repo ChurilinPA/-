@@ -1,0 +1,22 @@
+46 лотерея
+
+1) Вывести название и цену для всех анализов, которые продавались 5 августа 2024 и всю следующую неделю
+
+select  a.an_name,
+        a.an_price
+from Analysis a
+join Orders o on o.ord_an = a.an_id
+where o.ord_datetime::date between '2024-08-05' and '2024-08-12'
+
+2) Нарастающим итогом рассчитать, как увеличивалось количество проданных тестов каждый месяц каждого года с разбивкой по группе
+
+with cte as (
+select  date_trunc('month', o.ord_datetime) as month,
+        count(o.ord_id) as count_analysis
+from Analysis a 
+join join Orders o on o.ord_an = a.an_id
+group by date_trunc('month', o.ord_datetime)
+            )
+select  month,
+        sum(count_analysis) over (order by month) as cum_sum
+from cte 
