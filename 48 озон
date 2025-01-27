@@ -1,0 +1,24 @@
+48 Озон
+
+
+1)  В таблице могут быть дубли Одинокое число - то число, которое есть в таблице только в одном экземпляре
+
+Найдите максимальное одинокое число. Если таких чисел нет, выведете null| (пустоту)
+
+
+
+with cte as (select num,
+                    dense_rank() over (order by num desc) as rk
+            from MyNumbers
+            ),
+     cte_2 as (
+            select num,
+                    rk
+            from cte
+            group by num
+            having count(rk) = 1
+            )
+            select num
+            from cte_2
+            limit 1
+            
