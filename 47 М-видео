@@ -1,0 +1,14 @@
+47 М-видео
+
+1) Вывести user_id сотрудников, которые старше своих руководителей в нутри департамента
+
+- user_id
+- department_id
+- birthday_date 
+- chief_of_department
+
+
+select e.user_id
+from employees e
+join employees m on e.department_id = m.department_id and m.chief_of_department = true
+where e.chief_of_department = 'false' and e.birthday_date < m.birthday_date
