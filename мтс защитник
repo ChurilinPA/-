@@ -46,9 +46,27 @@ join product p on s.prod_nm = p.prod_nm and s.sale_dt between p.eff_dt and p.exp
 group by p.prod_cat
 
 
+5 задание:
 
 
+select  t1.color,
+        t2.color 
+from table t1
+cross join table t2
+where t1.color < t2.color
 
+-------------------------------
+
+
+with num as (select color,
+                    row_number() over () as rank
+            from table
+            )
+            select  a.color,
+                    b.color
+            from num a
+            join num b
+            where a.rank < b.rank
 
 
 
