@@ -1,0 +1,34 @@
+50 ташкент 
+
+Рассчитайте количество запросов на добавление в друзья для каждой даты отправки запросов на добавление в друзья. 
+Запрос отправляется, если action = отправлено, и принимается, если action = принято. 
+Если запрос не принят, в таблице нет записи о том, что он был принят. 
+В выходные данные будут включены только те даты, когда были отправлены запросы, 
+и хотя бы один из них был принят, поскольку показатель приема может быть рассчитан только для этих дат. 
+Отобразите результаты, упорядоченные от самой ранней до самой поздней даты.
+
+
+user_id_sender
+user_id_receiver
+date
+action
+
+
+ with sent_cte as ( select  date,
+                            user_id_sender,
+                            user_id_receiver
+                    from fb_friend_requests
+                    where action = 'sent'
+                 ),
+  accepted_cte as ( select date,
+                         user_id_sender,
+                         user_id_receiver
+                    from fb_friend_requests
+                    where action = 'accepted'
+                )
+                    select date,
+                            count(ac.user_id_receiver) / count(sc.user_id_sender) :: decimal as doly
+                    from sent_cte sc
+                    left join accepted_cte ac on sc.user_id_sender = ac.user_id_sender and sc.user_id_receiver = ac.user_id_receiver
+                    group by date
+                    order by date desc
