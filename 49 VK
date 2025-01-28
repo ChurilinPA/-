@@ -1,0 +1,42 @@
+49 VK
+
+Есть табличка table вида some_id Integer, в которой хранится числовая последовательность от 1 до n с пропусками.
+Нужно найти начало и конец пропуска данных, если его длина больше k
+
+Пример:
+some_id
+1,
+2,
+3,
+9,
+10,
+11,
+12,
+20
+22
+
+k = 2 => 4, 8
+13, 19
+
+
+with prev_id as (select some_id,
+                        lag(some_id) over (order by some_id) as previous_id
+                from table
+                ),
+      gap_id as (select some_id,  
+                        previous_id, 
+                        some_id - previous_id as gap
+                from prev_id
+                ),
+     rank_id as (select some_id,
+                        previous_id,
+                        gap - row_number() over (order by some_id) as rk
+                from gap_id
+                where gap > 1
+                )
+                select  previous_id + 1 as start,
+                        some_id - 1 as end
+                from rank_id
+                where (some_id - previous_id - 1) > k
+                        
+        
