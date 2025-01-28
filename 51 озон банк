@@ -1,0 +1,95 @@
+51 Озон банк
+
+1) 
+inner - 4
+left - 5
+cross - 12
+
+2) Найдите максимальное одинокое число. Если таких чисел нет, выведете null
+
+MyNumbers table:
+num
+
+select num
+from MyNumbers
+group by num
+having count(num) = 1
+order by num desc
+limit 1
+----
+select num
+from (select num,
+        dense_rank() over (order by num desc) as rk
+from MyNumbers)
+group by num
+having count(rk) = 1 
+limit 1 
+
+3) 
+Посчитать % изменения кол-ва клиентов, совершивших покупку, месяц к месяцу
+
+client_id
+order_id
+order_date
+
+
+with date_cte as ( select date_trunc('month', order_date) as month,
+                          count(distinct client_id) as count_clients
+                    from orders
+                    group by date_trunc('month', order_date)
+                )
+                select  month,
+                        (lag(count_clients) over (order by month) - count_clients) * 100.0 || '%' as procent
+                from date_cte
+                    
+                 
+4)
+
+Построить скрипт, считаюший конверсию из просмотра виджета 522955 в клик по нему по дням.
+
+with catalog_cte as (select date_trunc('day', date) as day,
+                            count(distinct user_client_id) as count_clients
+                    from Events
+                    where page_current_url = '/catalog' and widget_id = 522955
+                    group by date_trunc('day', date)
+                    ),
+      click_cte as (select date_trunc('day', date) as day,
+                            count(distinct user_client_id) as count_clients_click
+                    from Events
+                    where page_current_url = '/catalog' and widget_id = 522955 and action_type = 'click'
+                    group by date_trunc('day', date)
+                    )
+                    select  day,
+                            count_clients_click / count_clients as doly
+                    from catalog_cte a
+                    join click_cte b on a.day = b.day
+
+
+------------------------
+
+select  date_trunc('day', date) as day,
+        count(distinct case when widget_id = 522957 and action_type = 'view' then user_client_id end) / count(distinct user_client_id) as users
+from Events
+where page_current_url = '/catalog'
+group by date_trunc('day', date)
+
+-----------------
+
+
+select date_trunc('day', date) as day,
+        count(distinct case when widget_id = 522955 and action_type = 'click' then user_client_id end) / count(distinct user_client_id) as doly
+from Events
+where page_current_url = '/catalog'
+group by date_trunc('day', date)
+
+
+
+
+
+
+
+
+
+
+
+
